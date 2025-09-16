@@ -1,294 +1,381 @@
-# Avanavo SDD Framework
+# DocSpective - Document Analysis and Template Management System
 
-A comprehensive **role-based agentic framework** for **Spec-Driven Development (SDD)** that provides GitHub Copilot with structured instructions for disciplined, specification-first development across multiple technology stacks.
+DocSpective is a containerized document processing system that allows you to upload ZIP files containing documents and CSV metadata, automatically storing them in Supabase Storage and linking them through a PostgreSQL database.
 
-## What is Spec-Driven Development (SDD)?
+## Purpose and Vision
 
-Spec-Driven Development is a methodology where software development is guided by clear, executable specifications that serve as the single source of truth for project requirements, behaviors, and implementations.
+The primary purpose of DocSpective is to **convert legacy document templates from .doc/.dot formats to .docx format** and **integrate them with Sharedo**, a legal document management platform. The system serves as a bridge for:
 
-### Core Principles
+1. **Document Format Modernization** - Converting older Word formats (.doc, .dot) to modern .docx format
+2. **Metadata Processing** - Parsing CSV files containing template information and business rules
+3. **Storage Management** - Organizing documents in cloud storage with proper categorization
+4. **Sharedo Integration** - Preparing documents for upload and linking within Sharedo's document template system
 
-- **Specification First**: Before any code is written, create detailed specifications that define exactly what needs to be built
-- **Role-Based Expertise**: AI agents operate within defined roles (Solution Architect, Business Analyst, Developer, QA, DevOps, Technical Writer) to ensure appropriate expertise and boundaries
-- **Anti-Assumption Protocols**: Agents never add unrequested features or make silent assumptions - they ask for clarification explicitly
-- **Traceability**: Every feature implementation can be traced back to its originating specification with requirement IDs
-- **Deterministic Implementation**: When users agree to specific proposals, agents implement exactly what was agreed upon
+This solution enables law firms and legal organizations to migrate their existing document templates into modern, cloud-based document automation systems.
 
-## Why Use This Framework?
+## Architecture Overview
 
-### Traditional AI Agent Challenges
-- Agents make assumptions and add unrequested features
-- Inconsistent behavior across different types of work
-- No clear expertise boundaries or escalation paths
-- Implementation differs from what was proposed/agreed upon
-- Lack of requirement traceability
+- **FastifyAPI** - RESTful API with TypeScript and comprehensive Swagger documentation
+- **Supabase** - Self-hosted backend with PostgreSQL database, Storage, and Studio UI
+- **Docker Compose** - Complete containerized development environment
+- **Automated Processing** - ZIP file extraction, document storage, and metadata linking
 
-### SDD Framework Solutions
-- **Clear Role Boundaries**: Each agent operates within defined expertise domains with clear responsibilities
-- **Explicit Communication**: Agents state assumptions clearly and ask for clarification when uncertain
-- **Anti-Assumption Protocols**: Strict rules preventing agents from adding unrequested functionality
-- **Deterministic Behavior**: Agents implement exactly what was proposed and agreed upon
-- **Escalation Authority**: Solution Architect role can resolve conflicts and make architectural decisions
+## Prerequisites
 
-## How the Framework Works
+- **Docker** and **Docker Compose** installed
+- **Git** for cloning the repository
+- **curl** for testing API endpoints (optional)
 
-### Available Roles
+## Quick Start
 
-The framework provides **7 industry-standard roles** that GitHub Copilot can assume:
+### 1. Clone and Initialize
 
-| Role | Expertise | Primary Responsibilities |
-|------|-----------|-------------------------|
-| **Solution Architect** | System architecture, cross-role coordination | Escalation authority, conflict resolution, architectural decisions |
-| **Software Architect** | Technical design, API design | System structure, technology choices, design patterns |
-| **Business Analyst** | Requirements analysis | Functional specifications, user stories, acceptance criteria |
-| **Software Developer** | Implementation | Code writing, unit testing, requirement traceability |
-| **QA Engineer** | Quality assurance, testing | Test planning, validation, quality gates |
-| **DevOps Engineer** | Infrastructure, deployment | CI/CD, monitoring, operational requirements |
-| **Technical Writer** | Documentation | User guides, API docs, process documentation |
+```bash
+# Clone the repository
+git clone <repository-url>
+cd DocSpective
 
-### Role Selection Process
-
-1. **User makes request** → Copilot analyzes the request
-2. **Copilot proposes role** → "This appears to be a [ROLE] task. Should I proceed with [ROLE] instructions?"
-3. **User confirms** → Copilot loads role-specific instructions and operates within that role's boundaries
-4. **Role switching** → Available if request changes scope or different expertise is needed
-
-### Framework Benefits
-
-- 🎯 **Focused Expertise**: Each role provides specialized knowledge and appropriate boundaries
-- � **Anti-Assumption Protocols**: Prevents agents from adding unrequested features or making silent assumptions  
-- � **Deterministic Implementation**: Ensures agents implement exactly what was proposed and agreed upon
-- � **Requirement Traceability**: Every change links back to specific requirements with IDs
-- ⚡ **Escalation Authority**: Solution Architect can resolve conflicts and override constraints when necessary
-- � **Multi-Technology Support**: Works across DevExpress/.NET, Deno, Express, and other technology stacks
-
-## Installation & Usage
-
-### Package Distribution (Coming Soon)
-
-The framework will be available as packages across multiple ecosystems:
-
-- **npm**: `@avanavo/sdd-framework` (JavaScript/TypeScript projects)
-- **NuGet**: `Avanavo.SDD.Framework` (.NET/DevExpress projects)  
-- **Deno**: Available via JSR registry (Deno/Supabase functions)
-
-### Current Usage (GitHub Repository)
-
-1. **Copy the framework files** to your repository:
-   ```bash
-   # Copy the entire .github directory to your project
-   cp -r .github/ /path/to/your/project/
-   ```
-
-2. **Start a conversation with GitHub Copilot**:
-   ```
-   "I need to add user authentication to my application"
-   ```
-
-3. **Copilot will propose a role**:
-   ```
-   "This appears to be a Software Developer task. Should I proceed with Software Developer instructions?"
-   ```
-
-4. **Confirm and begin**:
-   ```
-   "Yes, proceed"
-   ```
-
-5. **Copilot operates within role boundaries**, following SDD principles and asking for specifications
-
-## Framework Structure
-
-```
-avanavo-sdd-template/
-├── .github/
-│   ├── COPILOT_INSTRUCTIONS.md          # Main role-based framework
-│   └── copilot-roles/                   # Role-specific instructions
-│       ├── SOLUTION_ARCHITECT.md        # Technical leadership & escalation
-│       ├── SOFTWARE_ARCHITECT.md        # System design & API architecture  
-│       ├── BUSINESS_ANALYST.md          # Requirements & specifications
-│       ├── SOFTWARE_DEVELOPER.md        # Implementation & coding
-│       ├── QA_ENGINEER.md               # Testing & quality assurance
-│       ├── DEVOPS_ENGINEER.md           # Infrastructure & deployment
-│       └── TECHNICAL_WRITER.md          # Documentation & guides
-├── README.md                            # This documentation
-└── LICENSE                              # MIT License
+# Run the complete initialization script
+./scripts/initialize-container
 ```
 
-## Core Framework Principles
+The initialization script will:
+- Stop any existing containers
+- Remove old volumes and data
+- Rebuild the API container
+- Start all services
+- Verify health and storage setup
 
-### 1. Spec-First Development
-- ✅ **Verify spec status before coding**
-- ✅ **Reference specific requirement IDs in all work**
-- ❌ **No implementation without approved specifications**
+### 2. Access the Services
 
-### 2. Explicit Communication  
-- ✅ **State assumptions clearly**
-- ✅ **Ask for clarification when uncertainty > 10%**
-- ❌ **Never silently infer critical details**
+After initialization, the following services will be available:
 
-### 3. Anti-Assumption Practices
-- ✅ **Stick to what was explicitly requested**
-- ✅ **Label additions as suggestions**: "You didn't ask for this, but would you like me to suggest..."
-- ❌ **Adding "helpful" features not requested**
-- ❌ **Assuming technology preferences beyond what's stated**
+| Service | URL | Description |
+|---------|-----|-------------|
+| **API Documentation** | http://localhost:3001/ | Interactive Swagger UI for testing endpoints |
+| **API Health Check** | http://localhost:3001/api/health | System health and connectivity status |
+| **API Upload Endpoint** | http://localhost:3001/api/upload | Document upload and processing |
+| **Supabase Studio** | http://localhost:3000 | Database management and storage browser |
+| **Kong Gateway** | http://localhost:8000 | API gateway (for advanced routing) |
 
-### 4. Deterministic Implementation
-- ✅ **When user agrees to a proposal, implement EXACTLY what was proposed**
-- ✅ **Copy exact text from proposals when implementing**
-- ❌ **Never regenerate or "improve" upon agreed content**
+## How to Upload Documents
 
-### 5. Role Boundaries
-- ✅ **Stay within your role's defined responsibilities**
-- ✅ **Escalate to Solution Architect for cross-role conflicts**
-- ✅ **Respect other roles' expertise domains**
+### Using Swagger UI (Recommended)
 
-## Example Interactions
+1. **Open the API Documentation**: Navigate to http://localhost:3001/
+2. **Find the Upload Endpoint**: Look for the `POST /api/upload` endpoint under "Document Analyser"
+3. **Click "Try it out"**: This will enable the file upload interface
+4. **Choose your ZIP file**: Click "Choose File" and select `.testdata/uploadtestdata.zip`
+5. **Execute the request**: Click the "Execute" button
+6. **Review the response**: You should see a successful response with:
+   - Batch ID (UUID)
+   - CSV file information (filename and storage path)
+   - Uploaded files (array of storage paths)
+   - Template records (parsed from CSV and linked to batch)
 
-### Business Analyst Role
-```
-User: "I need user authentication functionality"
+### Using curl (Alternative)
 
-BA: "I'll help create the functional specification for user authentication. 
-     What authentication methods do you require? (email/password, OAuth, 2FA?)
-     What are the security requirements?
-     Should I create user stories with acceptance criteria?"
-```
-
-### Software Developer Role  
-```
-User: "Implement the login function"
-
-Dev: "I need the approved specification for the login functionality. 
-     Could you provide:
-     • The specification document path
-     • Specific requirement ID to implement
-     • Current specification status (should be 'Approved')"
+```bash
+curl -X POST \
+  -F "file=@.testdata/uploadtestdata.zip" \
+  http://localhost:3001/api/upload
 ```
 
-### Solution Architect Role (Escalation)
-```
-Dev: "I'm getting conflicting requirements between the API spec and UI mockups"
+### Expected Response Structure
 
-SA: "I'll analyze this conflict. Let me review both specifications and 
-    make an architectural decision. I'll document the resolution and 
-    update the affected specifications accordingly."
-```
-
-## Multi-Technology Support
-
-The framework is designed to work seamlessly across different technology stacks:
-
-### DevExpress/.NET Frontend Applications
-- Business Analyst creates specifications for UI components and user workflows
-- Software Architect designs component architecture and data binding patterns
-- Software Developer implements DevExpress controls with requirement traceability
-
-### Deno Functions (Supabase)
-- Business Analyst specifies API requirements and business logic
-- Software Architect designs function architecture and database interactions  
-- Software Developer implements Deno functions with proper error handling
-
-### Express.js APIs
-- Business Analyst defines endpoint specifications and data contracts
-- Software Architect designs API architecture and middleware patterns
-- Software Developer implements routes with validation and documentation
-
-## Advanced Features
-
-### Requirement Traceability
-Every code change includes references to specifications:
-```javascript
-// Implements REQ-AUTH-001: User login validation
-// Business Rule BR-PASSWORD-001: Password complexity requirements
-function validateUserLogin(email, password) {
-    // Implementation with clear requirement links
+```json
+{
+  "status": "success",
+  "message": "Successfully processed zip file. Uploaded 4 documents and CSV file. Created batch <uuid> and upserted 4 template records.",
+  "data": {
+    "batchId": "123e4567-e89b-12d3-a456-426614174000",
+    "csvFile": {
+      "fileName": "templates.csv",
+      "storagePath": "templates.csv"
+    },
+    "uploadedFiles": [
+      "Document1.docx",
+      "Document2.docx",
+      "Document3.docx",
+      "Document4.docx"
+    ],
+    "upsertedTemplates": [
+      {
+        "id": "123e4567-e89b-12d3-a456-426614174001",
+        "template_type": "Contract",
+        "system_name": "Legal System",
+        "name": "Employment Contract",
+        "docid": "Document1.docx",
+        "batch_id": "123e4567-e89b-12d3-a456-426614174000"
+      }
+    ]
+  }
 }
 ```
 
-### Commit Message Standards
+## How to Validate Document Storage
+
+### Using Supabase Studio
+
+1. **Open Supabase Studio**: Navigate to http://localhost:3000
+2. **Navigate to Storage**: Click on "Storage" in the left sidebar
+3. **Browse the 'uploads' bucket**: 
+   - You should see your uploaded documents (.docx files)
+   - You should see the CSV file from your upload
+4. **Check file details**: Click on any file to see its metadata and download options
+
+### Using Database Queries
+
+In Supabase Studio, go to the SQL Editor and run:
+
+```sql
+-- View all batches
+SELECT * FROM uploads ORDER BY timestamp DESC;
+
+-- View all templates linked to batches
+SELECT 
+  t.*,
+  u.filepath as csv_file_path,
+  u.timestamp as batch_created_at
+FROM templates t
+JOIN uploads u ON t.batch_id = u.id
+ORDER BY u.timestamp DESC;
+
+-- Count documents per batch
+SELECT 
+  u.id as batch_id,
+  u.filepath as csv_file,
+  u.timestamp,
+  COUNT(t.id) as document_count
+FROM uploads u
+LEFT JOIN templates t ON t.batch_id = u.id
+GROUP BY u.id, u.filepath, u.timestamp
+ORDER BY u.timestamp DESC;
 ```
-feat: implement user password validation (REQ-AUTH-001)
 
-- Add password strength validation per BR-PASSWORD-001
-- Minimum 8 chars, mixed case, numbers required  
-- Returns clear validation messages for UI
-- Unit tests cover all acceptance criteria
+### Storage Bucket Structure
 
-Refs: REQ-AUTH-001, BR-PASSWORD-001
+After upload, your storage will contain:
+
+```
+uploads/
+├── templates.csv           # CSV metadata file
+├── Document1.docx          # Uploaded document
+├── Document2.docx          # Uploaded document
+├── Document3.docx          # Uploaded document
+└── Document4.docx          # Uploaded document
+
+conversions/                # Ready for future processed documents
 ```
 
-### Test Case Traceability
-```markdown
-## Test Case: TC-AUTH-001
-**Requirement**: REQ-AUTH-001 - User authentication
-**Acceptance Criteria**: AC-AUTH-001.1 - Valid credentials redirect to dashboard
+## System Health Check
 
-### Test Steps
-1. Navigate to login page
-2. Enter valid credentials
-3. Click login button
+### API Health Endpoint
 
-### Expected Result
-- User redirected to dashboard
-- Welcome message displays
-- Session established per specification
+Visit http://localhost:3001/api/health to see comprehensive system status:
+
+```json
+{
+  "status": "healthy",
+  "timestamp": "2025-09-16T21:42:47.798Z",
+  "uptime": 6.677114304,
+  "checks": {
+    "api": {
+      "status": "healthy",
+      "message": "API is responding"
+    },
+    "database": {
+      "status": "healthy",
+      "message": "Database connection successful",
+      "responseTime": 39
+    },
+    "storage": {
+      "status": "healthy",
+      "message": "Storage connection successful",
+      "buckets": ["uploads", "conversions"]
+    }
+  }
+}
 ```
 
-## Getting Started
+### Container Status
 
-### 1. Copy Framework to Your Project
 ```bash
-# Copy the .github directory to your repository
-cp -r .github/ /path/to/your/project/
+# Check all container status
+docker-compose ps
 
-# Or download and extract specific files you need
+# Check specific logs
+docker logs docspective-api
+docker logs supabase-db
+docker logs supabase-storage
 ```
 
-### 2. Start Using Role-Based Development
+## Development Workflow
+
+### Making Changes
+
+1. **Edit source code** in `api/src/`
+2. **Rebuild the API container**:
+   ```bash
+   docker-compose down api
+   docker-compose build api
+   docker-compose up -d api
+   ```
+
+### Full Reset
+
+If you need to completely reset the environment:
+
+```bash
+./scripts/initialize-container
 ```
-You: "I need to add user authentication"
-Copilot: "This appears to be a Business Analyst task. Should I proceed with Business Analyst instructions?"
-You: "Yes"
-Copilot: [Operates as BA] "I'll help create the user authentication specification..."
+
+This will wipe all data and start fresh.
+
+### Database Schema
+
+The system uses two main tables:
+
+**uploads table** (batches):
+- `id` (UUID, Primary Key)
+- `timestamp` (Created timestamp)
+- `filepath` (Path to CSV file in storage)
+
+**templates table**:
+- `id` (UUID, Primary Key)
+- `template_type`, `system_name`, `name`, etc. (Metadata from CSV)
+- `docid` (Storage path to the actual document file)
+- `batch_id` (Foreign key to uploads table)
+
+## Troubleshooting
+
+### Common Issues
+
+1. **"Port already in use"**: Stop existing containers with `docker-compose down`
+2. **"Permission denied"**: Make sure the initialization script is executable: `chmod +x scripts/initialize-container`
+3. **API not responding**: Check logs with `docker logs docspective-api`
+4. **Storage bucket missing**: Re-run the initialization script
+
+### Container Logs
+
+```bash
+# API logs
+docker logs docspective-api --follow
+
+# Database logs
+docker logs supabase-db --follow
+
+# All services
+docker-compose logs --follow
 ```
 
-### 3. Switch Roles as Needed
+### Health Diagnostics
+
+```bash
+# Quick health check
+curl http://localhost:3001/api/health
+
+# Full container status
+docker-compose ps
+
+# Storage verification
+curl -s http://localhost:3001/api/health | grep -o '"buckets":\[[^]]*\]'
 ```
-You: "Now implement the authentication API"  
-Copilot: "This request seems better suited for a Software Developer role. Should I switch to Software Developer for this task?"
-You: "Yes, switch to developer"
-Copilot: [Loads Developer instructions] "I need the approved specification for authentication..."
+
+## API Endpoints Reference
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/health` | System health check |
+| POST | `/api/upload` | Upload and process ZIP files |
+| GET | `/` | Swagger UI documentation |
+
+## File Format Requirements
+
+### ZIP File Structure
+```
+your-upload.zip
+├── templates.csv           # Required: CSV metadata file
+├── Document1.docx          # Word documents
+├── Document2.docx
+└── ...                     # Additional .doc, .docx, .dot, .dotx files
 ```
 
-## Framework Customization
-
-You can customize the framework by modifying:
-- **`.github/COPILOT_INSTRUCTIONS.md`** - Main framework configuration
-- **`.github/copilot-roles/*.md`** - Individual role instructions  
-- **Role triggers** - Keywords that activate specific roles
-- **Examples and templates** - Add project-specific examples
-
-## Contributing
-
-1. Fork this repository
-2. Create feature branches for framework improvements
-3. Test changes with GitHub Copilot interactions
-4. Submit pull requests with clear descriptions
-5. Follow the SDD methodology - create specifications before implementation
-
-## License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Support & Community
-
-- **GitHub Issues**: Report bugs or request features
-- **Discussions**: Share experiences and ask questions
-- **Documentation**: Review role instructions and examples
-- **Examples**: See the framework in action across different technology stacks
+### CSV Format
+The CSV file should contain columns that match the template schema. Supported column names (case-insensitive):
+- `template_type` or `Template Type`
+- `system_name` or `System Name`
+- `name` or `Name`
+- `categories` or `Categories`
+- `data_context` or `Data Context`
+- `participant_role` or `Participant Role`
+- `output_title` or `Output Title`
+- `output_file_name` or `Output File Name`
+- `document_source` or `Document Source`
+- `docid` or `DocID` or `DocId` (Required: should match document filenames without extension)
 
 ---
 
-**Ready to implement disciplined, specification-driven development?** Copy the `.github` directory to your project and start your first role-based conversation with GitHub Copilot!
+🎉 **You're all set!** The system is designed to be self-contained and easy to use. Start by uploading the test data through the Swagger UI and explore the results in Supabase Studio.
+
+## Next Steps - Sharedo Integration
+
+The next phase of DocSpective development will focus on **Sharedo connectivity** to complete the document template migration workflow:
+
+### Planned Enhancements
+
+#### 1. **Document Format Conversion**
+- Implement conversion from .doc/.dot to .docx format
+- Preserve document structure, formatting, and embedded objects
+- Validate converted documents for compatibility
+
+#### 2. **Sharedo API Integration**
+- Connect to Sharedo's document template management system
+- Authenticate using Sharedo's OAuth/Bearer token system
+- Implement template upload and registration workflows
+
+#### 3. **Template Registration Workflow**
+- **Template Creation**: Use Sharedo's `/api/modeller/documentTemplates` endpoint
+- **Document Upload**: Upload converted .docx files to Sharedo repositories
+- **Metadata Mapping**: Map CSV template data to Sharedo's template schema
+- **Work Type Linking**: Associate templates with appropriate Sharedo work types
+
+#### 4. **Enhanced API Endpoints**
+Based on the provided Postman collection, planned endpoints include:
+
 ```
+POST /api/sharedo/templates/upload     # Upload documents to Sharedo
+POST /api/sharedo/templates/create     # Create template definitions
+GET  /api/sharedo/templates/types      # Retrieve available template types
+GET  /api/sharedo/work-types           # Get Sharedo work type mappings
+POST /api/convert/doc-to-docx          # Document format conversion
+```
+
+#### 5. **Configuration Management**
+- Sharedo environment configuration (demo-aus.sharedo.tech)
+- Authentication credential management
+- Repository and folder mapping settings
+- Template type and work type associations
+
+### Development Roadmap
+
+1. **Phase 1 (Current)**: ✅ Document storage and metadata processing
+2. **Phase 2 (Next)**: Document format conversion (.doc/.dot → .docx)
+3. **Phase 3**: Sharedo authentication and API connectivity
+4. **Phase 4**: End-to-end template migration workflow
+5. **Phase 5**: Batch processing and monitoring dashboard
+
+### Technical Integration Points
+
+The system will integrate with Sharedo using:
+
+- **Authentication**: OAuth 2.0 flow with client credentials
+- **Document Repository**: Sharedo's SharePoint-based template storage
+- **Template Metadata**: Mapping CSV fields to Sharedo's template schema
+- **Work Types**: Linking templates to appropriate legal work categories
+
+Reference materials for this integration are available in:
+- `.testdata/DocSpective.postman_collection.json` - Complete API reference
+- `.testdata/demo-aus.postman_environment.json` - Environment configuration
+
+This integration will enable seamless migration of legacy document templates into modern legal document automation workflows.
