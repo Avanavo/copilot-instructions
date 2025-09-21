@@ -1,6 +1,6 @@
 {
   "name": "@avanavo/copilot-instructions",
-  "version": "0.2.0",
+  "version": "0.1.9",
   "description": "GitHub Copilot Agentic Development Principles - Role-based instruction framework for disciplined development",
   "bin": {
     "copilot-instructions": "./bin/setup.js"
