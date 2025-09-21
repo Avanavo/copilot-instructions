@@ -1,0 +1,40 @@
+# Root development dependencies (for release script)
+node_modules/
+/package-lock.json
+
+# npm-specific artifacts
+npm/node_modules/
+npm/npm-debug.log*
+npm/.github/
+npm/README.md
+
+# .NET-specific artifacts
+nuget/bin/
+nuget/obj/
+nuget/*.user
+nuget/*.suo
+*.nupkg
+*.snupkg
+
+# VS Code
+.vscode/settings.json
+.vscode/launch.json
+.vscode/extensions.json
+
+# IDE
+.vs/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Test artifacts
+test-artifacts/
+artifacts/

@@ -1,0 +1,69 @@
+name: Validate Packages
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  validate-shared-resources:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Validate instruction files
+        run: |
+          echo "Validating copilot instruction files..."
+          
+          # Check main instruction file
+          if [ ! -f ".github/copilot-instructions.md" ]; then
+            echo "❌ Main instruction file missing"
+            exit 1
+          fi
+          
+          # Check role directories
+          if [ ! -d ".github/copilot-roles" ]; then
+            echo "❌ Role instructions directory missing"
+            exit 1
+          fi
+          
+          # Count role files
+          ROLE_COUNT=$(find .github/copilot-roles -name "*.md" | wc -l)
+          if [ $ROLE_COUNT -lt 5 ]; then
+            echo "❌ Expected at least 5 role instruction files, found $ROLE_COUNT"
+            exit 1
+          fi
+          
+          echo "✅ Found $ROLE_COUNT role instruction files"
+          echo "✅ Instruction files validation passed"
+
+  validate-npm:
+    uses: ./.github/workflows/validate-npm.yml
+    
+  validate-nuget:
+    uses: ./.github/workflows/validate-nuget.yml
+    
+  validation-summary:
+    needs: [validate-shared-resources, validate-npm, validate-nuget]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Create validation summary
+        run: |
+          echo "## 📦 Dual Package Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Shared Resources" >> $GITHUB_STEP_SUMMARY
+          echo "- **Instruction files**: ${{ needs.validate-shared-resources.result == 'success' && '✅ Valid' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Package Distributions" >> $GITHUB_STEP_SUMMARY
+          echo "- **npm package**: ${{ needs.validate-npm.result == 'success' && '✅ Valid' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **NuGet package**: ${{ needs.validate-nuget.result == 'success' && '✅ Valid' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Overall Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.validate-shared-resources.result }}" == "success" ] && [ "${{ needs.validate-npm.result }}" == "success" ] && [ "${{ needs.validate-nuget.result }}" == "success" ]; then
+            echo "🎉 **All packages ready for release!**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🚨 **Some validations failed - review before release**" >> $GITHUB_STEP_SUMMARY
+          fi

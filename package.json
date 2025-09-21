@@ -1,0 +1,26 @@
+{
+  "name": "copilot-instructions-workspace",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Development workspace for copilot-instructions dual-distribution",
+  "scripts": {
+    "release": "node scripts/release.js",
+    "install-all": "npm install && cd npm && npm install && cd ../nuget && dotnet restore",
+    "build-all": "cd npm && npm pack --dry-run && cd ../nuget && dotnet build",
+    "test-all": "cd npm && npm test && cd ../nuget && dotnet test"
+  },
+  "devDependencies": {
+    "fs-extra": "^11.0.0",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.6"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Avanavo/copilot-instructions.git"
+  },
+  "author": "Avanavo",
+  "license": "MIT"
+}

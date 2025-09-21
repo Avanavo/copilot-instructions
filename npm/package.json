@@ -1,0 +1,42 @@
+{
+  "name": "@avanavo/copilot-instructions",
+  "version": "0.1.8",
+  "description": "GitHub Copilot Agentic Development Principles - Role-based instruction framework for disciplined development",
+  "bin": {
+    "copilot-instructions": "./bin/setup.js"
+  },
+  "scripts": {
+    "prepare-package": "node ../scripts/prepare-npm.js",
+    "cleanup-package": "node ../scripts/prepare-npm.js cleanup",
+    "release": "node ../scripts/release.js"
+  },
+  "files": [
+    ".github/**/*",
+    "bin/setup.js"
+  ],
+  "keywords": [
+    "github-copilot",
+    "copilot-instructions",
+    "agentic-development",
+    "software-development",
+    "role-based-development"
+  ],
+  "author": "Avanavo",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Avanavo/copilot-instructions.git"
+  },
+  "homepage": "https://github.com/Avanavo/copilot-instructions#readme",
+  "dependencies": {
+    "fs-extra": "^11.0.0",
+    "chalk": "^4.1.2",
+    "inquirer": "^8.2.6"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

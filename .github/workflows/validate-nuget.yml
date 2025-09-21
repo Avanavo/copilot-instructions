@@ -1,0 +1,82 @@
+name: Validate NuGet Package
+
+on:
+  workflow_call:
+    inputs:
+      dotnet-version:
+        description: '.NET version to use'
+        required: false
+        default: '8.0.x'
+        type: string
+
+jobs:
+  validate-nuget:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: ${{ inputs.dotnet-version }}
+        
+    - name: Validate package structure
+      run: |
+        cd nuget
+        echo "Validating .NET Global Tool structure..."
+        
+        # Check if required files exist
+        if [ ! -f "Avanavo.CopilotInstructions.csproj" ]; then
+          echo "❌ Avanavo.CopilotInstructions.csproj not found"
+          exit 1
+        fi
+        
+        if [ ! -f "Program.cs" ]; then
+          echo "❌ Program.cs not found"
+          exit 1
+        fi
+        
+        if [ ! -f "InstallationLogic.cs" ]; then
+          echo "❌ InstallationLogic.cs not found"
+          exit 1
+        fi
+        
+        echo "✅ .NET Global Tool files found"
+        
+    - name: Test project build
+      run: |
+        cd nuget
+        echo "Testing .NET project build..."
+        
+        # Test project restore and build
+        dotnet restore
+        dotnet build --configuration Release
+        
+        echo "✅ .NET project build passed"
+        
+    - name: Test package creation
+      run: |
+        cd nuget
+        echo "Testing .NET package creation..."
+        
+        # Test package creation
+        dotnet pack --configuration Release --output ./test-artifacts
+        
+        # Check if package was created (version should match project file)
+        PACKAGE_FILE=$(find ./test-artifacts -name "Avanavo.CopilotInstructions.*.nupkg" | head -1)
+        if [ -z "$PACKAGE_FILE" ]; then
+          echo "❌ .NET package file not created"
+          exit 1
+        fi
+        
+        echo "✅ .NET package created: $(basename $PACKAGE_FILE)"
+        
+    - name: Create NuGet validation summary
+      run: |
+        echo "## ✅ NuGet Package Validation Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "- **Project structure**: Valid ✅" >> $GITHUB_STEP_SUMMARY
+        echo "- **.NET build**: Successful ✅" >> $GITHUB_STEP_SUMMARY
+        echo "- **Package creation**: Ready for publishing ✅" >> $GITHUB_STEP_SUMMARY

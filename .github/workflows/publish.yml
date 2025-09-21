@@ -1,0 +1,86 @@
+name: Publish Packages
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  validate-before-publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Validate instruction files
+        run: |
+          echo "Pre-publish validation of copilot instruction files..."
+          
+          # Check main instruction file
+          if [ ! -f ".github/copilot-instructions.md" ]; then
+            echo "❌ Main instruction file missing"
+            exit 1
+          fi
+          
+          # Check role directories
+          if [ ! -d ".github/copilot-roles" ]; then
+            echo "❌ Role instructions directory missing"
+            exit 1
+          fi
+          
+          # Count role files
+          ROLE_COUNT=$(find .github/copilot-roles -name "*.md" | wc -l)
+          if [ $ROLE_COUNT -lt 5 ]; then
+            echo "❌ Expected at least 5 role instruction files, found $ROLE_COUNT"
+            exit 1
+          fi
+          
+          echo "✅ Found $ROLE_COUNT role instruction files"
+          echo "✅ Pre-publish validation passed"
+
+  publish-npm:
+    needs: [validate-before-publish]
+    uses: ./.github/workflows/publish-npm.yml
+    permissions:
+      contents: read
+      id-token: write
+    secrets:
+      NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+    
+  publish-nuget:
+    needs: [validate-before-publish]
+    uses: ./.github/workflows/publish-nuget.yml
+    secrets:
+      NUGET_API_KEY: ${{ secrets.NUGET_API_KEY }}
+    
+  publish-summary:
+    needs: [validate-before-publish, publish-npm, publish-nuget]
+    runs-on: ubuntu-latest
+    if: always()
+    steps:
+      - name: Create publish summary
+        run: |
+          echo "## 🚀 Dual Package Publishing Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Pre-publish Validation" >> $GITHUB_STEP_SUMMARY
+          echo "- **Instruction files**: ${{ needs.validate-before-publish.result == 'success' && '✅ Valid' || '❌ Failed' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Package Publications" >> $GITHUB_STEP_SUMMARY
+          echo "- **npm package**: ${{ needs.publish-npm.result == 'success' && '✅ Published' || needs.publish-npm.result == 'failure' && '❌ Failed' || '⏸️ Skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **NuGet package**: ${{ needs.publish-nuget.result == 'success' && '✅ Published' || needs.publish-nuget.result == 'failure' && '❌ Failed' || '⏸️ Skipped' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Distribution Links" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.publish-npm.result }}" == "success" ]; then
+            echo "- 📦 [npm package](https://www.npmjs.com/package/@avanavo/copilot-instructions)" >> $GITHUB_STEP_SUMMARY
+          fi
+          if [ "${{ needs.publish-nuget.result }}" == "success" ]; then
+            echo "- 📦 [NuGet package](https://www.nuget.org/packages/Avanavo.CopilotInstructions)" >> $GITHUB_STEP_SUMMARY
+          fi
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Overall Status" >> $GITHUB_STEP_SUMMARY
+          if [ "${{ needs.publish-npm.result }}" == "success" ] && [ "${{ needs.publish-nuget.result }}" == "success" ]; then
+            echo "🎉 **Both packages published successfully!**" >> $GITHUB_STEP_SUMMARY
+          elif [ "${{ needs.publish-npm.result }}" == "success" ] || [ "${{ needs.publish-nuget.result }}" == "success" ]; then
+            echo "⚠️ **Partial success - one package published**" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "🚨 **Publishing failed - check logs for details**" >> $GITHUB_STEP_SUMMARY
+          fi

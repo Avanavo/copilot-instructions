@@ -1,0 +1,84 @@
+name: Validate npm Package
+
+on:
+  workflow_call:
+    inputs:
+      node-version:
+        description: 'Node.js version to use'
+        required: false
+        default: '18'
+        type: string
+
+jobs:
+  validate-npm:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ inputs.node-version }}
+      
+      - name: Install dependencies
+        run: |
+          cd npm
+          npm ci
+      
+      - name: Lint package.json
+        run: |
+          cd npm
+          echo "Validating package.json structure..."
+          
+          # Check required fields
+          node -e "
+          const pkg = require('./package.json');
+          const required = ['name', 'version', 'description', 'bin', 'files', 'author', 'license'];
+          const missing = required.filter(field => !pkg[field]);
+          if (missing.length > 0) {
+            console.error('❌ Missing required fields:', missing.join(', '));
+            process.exit(1);
+          }
+          console.log('✅ package.json validation passed');
+          "
+      
+      - name: Validate bin script
+        run: |
+          cd npm
+          echo "Validating bin script..."
+          
+          if [ ! -f "bin/setup.js" ]; then
+            echo "❌ bin/setup.js not found"
+            exit 1
+          fi
+          
+          # Check if script is executable (has shebang)
+          if ! head -1 bin/setup.js | grep -q "#!/usr/bin/env node"; then
+            echo "❌ bin/setup.js missing shebang"
+            exit 1
+          fi
+          
+          # Basic syntax check
+          node -c bin/setup.js
+          
+          echo "✅ bin script validation passed"
+      
+      - name: Test package build
+        run: |
+          cd npm
+          echo "Testing npm package build..."
+          
+          # Test npm pack (simulates publish without publishing)
+          npm pack --dry-run
+          
+          echo "✅ npm package build test passed"
+      
+      - name: Create npm validation summary
+        run: |
+          echo "## ✅ npm Package Validation Results" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **package.json**: Valid structure ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **bin script**: Syntax and format ✅" >> $GITHUB_STEP_SUMMARY
+          echo "- **npm package build**: Ready for publishing ✅" >> $GITHUB_STEP_SUMMARY

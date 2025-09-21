@@ -1,0 +1,123 @@
+name: Publish NuGet Package
+
+on:
+  workflow_call:
+    secrets:
+      NUGET_API_KEY:
+        description: 'NuGet API key for publishing'
+        required: true
+
+jobs:
+  publish-nuget:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        dotnet-version: '8.0.x'
+        
+    - name: Validate package structure
+      run: |
+        cd nuget
+        echo "Validating .NET Global Tool structure..."
+        
+        # Check if required files exist
+        if [ ! -f "Avanavo.CopilotInstructions.csproj" ]; then
+          echo "❌ Avanavo.CopilotInstructions.csproj not found"
+          exit 1
+        fi
+        
+        if [ ! -f "Program.cs" ]; then
+          echo "❌ Program.cs not found"
+          exit 1
+        fi
+        
+        if [ ! -f "InstallationLogic.cs" ]; then
+          echo "❌ InstallationLogic.cs not found"
+          exit 1
+        fi
+        
+        if [ ! -d "../.github" ]; then
+          echo "❌ .github directory not found"
+          exit 1
+        fi
+        
+        # Count instruction files
+        instruction_count=$(find ../.github -name "*.md" | wc -l)
+        echo "Found $instruction_count instruction files"
+        
+        if [ $instruction_count -eq 0 ]; then
+          echo "❌ No instruction files found in .github directory"
+          exit 1
+        fi
+        
+        echo "✅ Package structure validation passed"
+        
+    - name: Extract version from tag
+      id: version
+      run: |
+        # Extract version from tag (remove 'v' prefix if present)
+        VERSION=${GITHUB_REF#refs/tags/}
+        VERSION=${VERSION#v}
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+        echo "Extracted version: $VERSION"
+        
+    - name: Verify package version matches tag
+      run: |
+        cd nuget
+        # Extract current version from .csproj file
+        CSPROJ_VERSION=$(grep -oP '<PackageVersion>\K[^<]+' Avanavo.CopilotInstructions.csproj)
+        TAG_VERSION="${{ steps.version.outputs.version }}"
+        
+        echo "Tag version: $TAG_VERSION"
+        echo "Project version: $CSPROJ_VERSION"
+        
+        if [ "$CSPROJ_VERSION" != "$TAG_VERSION" ]; then
+          echo "❌ Version mismatch! .csproj version ($CSPROJ_VERSION) doesn't match tag version ($TAG_VERSION)"
+          echo "Ensure you used the release script to synchronize versions"
+          exit 1
+        fi
+        
+        echo "✅ Version verification passed"
+        
+    - name: Restore dependencies
+      run: |
+        cd nuget
+        dotnet restore
+      
+    - name: Build project
+      run: |
+        cd nuget
+        dotnet build --configuration Release --no-restore
+      
+    - name: Test package creation
+      run: |
+        cd nuget
+        echo "Testing package creation..."
+        dotnet pack --configuration Release --no-build --output ./artifacts
+        
+        # Check if package was created
+        if [ ! -f "./artifacts/Avanavo.CopilotInstructions.${{ steps.version.outputs.version }}.nupkg" ]; then
+          echo "❌ Package file not created"
+          exit 1
+        fi
+        
+        echo "✅ Package created successfully"
+        
+    - name: Publish to NuGet
+      run: |
+        cd nuget
+        dotnet nuget push "./artifacts/Avanavo.CopilotInstructions.${{ steps.version.outputs.version }}.nupkg" \
+          --api-key ${{ secrets.NUGET_API_KEY }} \
+          --source https://api.nuget.org/v3/index.json \
+          --skip-duplicate
+          
+    - name: Upload package artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: nuget-package
+        path: ./nuget/artifacts/*.nupkg
