@@ -15,6 +15,7 @@ nuget/*.user
 nuget/*.suo
 *.nupkg
 *.snupkg
+*.sln
 
 # VS Code
 .vscode/settings.json

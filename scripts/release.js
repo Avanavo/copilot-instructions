@@ -14,18 +14,18 @@ class ReleaseManager {
 
   async run() {
     console.log(chalk.blue.bold('\n📦 Dual Package Release Manager (npm + NuGet)\n'));
-    
+
     try {
       await this.checkPrerequisites();
       const currentVersion = await this.getCurrentVersion();
       const newVersion = await this.selectNewVersion(currentVersion);
-      
+
       await this.confirmRelease(currentVersion, newVersion);
       await this.performRelease(newVersion);
-      
+
       console.log(chalk.green.bold('\n🎉 Dual package release completed successfully!\n'));
       this.showNextSteps(newVersion);
-      
+
     } catch (error) {
       console.error(chalk.red('\n❌ Release failed:'), error.message);
       process.exit(1);
@@ -34,33 +34,32 @@ class ReleaseManager {
 
   async checkPrerequisites() {
     console.log(chalk.yellow('🔍 Checking prerequisites...'));
-    
+
     // Check if we're in a git repository
     try {
       execSync('git status', { stdio: 'pipe' });
     } catch (error) {
       throw new Error('Not in a git repository');
     }
-    
+
     // Check if npm and nuget package files exist
     if (!await fs.pathExists(this.npmPackagePath)) {
       throw new Error(`npm package.json not found at ${this.npmPackagePath}`);
     }
-    
+
     if (!await fs.pathExists(this.nugetProjectPath)) {
       throw new Error(`NuGet project file not found at ${this.nugetProjectPath}`);
     }
-    
+
     // Check if working directory is clean
-    try {
-      const status = execSync('git status --porcelain', { encoding: 'utf8' });
-      if (status.trim()) {
-        throw new Error('Working directory is not clean. Please commit or stash changes.');
-      }
-    } catch (error) {
+
+    const status = execSync('git status --porcelain', { encoding: 'utf8' });
+    if (status.trim()) {
+      throw new Error('Working directory is not clean. Please commit or stash changes.');
+    } else {
       throw new Error('Unable to check git status');
     }
-    
+
     // Check if we're on main branch
     try {
       const branch = execSync('git branch --show-current', { encoding: 'utf8' }).trim();
@@ -73,7 +72,7 @@ class ReleaseManager {
             default: false
           }
         ]);
-        
+
         if (!proceed) {
           throw new Error('Release cancelled');
         }
@@ -82,7 +81,7 @@ class ReleaseManager {
       if (error.message === 'Release cancelled') throw error;
       console.log(chalk.yellow('⚠️  Unable to check current branch'));
     }
-    
+
     console.log(chalk.green('✅ Prerequisites check passed'));
   }
 
@@ -90,18 +89,18 @@ class ReleaseManager {
     // Get version from npm package.json
     const npmPkg = await fs.readJson(this.npmPackagePath);
     const npmVersion = npmPkg.version;
-    
+
     // Get version from NuGet .csproj
     const csprojContent = await fs.readFile(this.nugetProjectPath, 'utf8');
     const versionMatch = csprojContent.match(/<PackageVersion>(.*?)<\/PackageVersion>/);
     const nugetVersion = versionMatch ? versionMatch[1] : null;
-    
+
     // Verify versions are synchronized
     if (nugetVersion && npmVersion !== nugetVersion) {
       console.log(chalk.yellow(`⚠️  Version mismatch detected:`));
       console.log(chalk.yellow(`   npm:   ${npmVersion}`));
       console.log(chalk.yellow(`   NuGet: ${nugetVersion}`));
-      
+
       const { useVersion } = await inquirer.prompt([
         {
           type: 'list',
@@ -113,16 +112,16 @@ class ReleaseManager {
           ]
         }
       ]);
-      
+
       return useVersion;
     }
-    
+
     return npmVersion;
   }
 
   async selectNewVersion(currentVersion) {
     const versions = this.calculateVersions(currentVersion);
-    
+
     const { versionType } = await inquirer.prompt([
       {
         type: 'list',
@@ -159,7 +158,7 @@ class ReleaseManager {
 
   calculateVersions(currentVersion) {
     const [major, minor, patch] = currentVersion.split('.').map(Number);
-    
+
     return {
       patch: `${major}.${minor}.${patch + 1}`,
       minor: `${major}.${minor + 1}.0`,
@@ -175,7 +174,7 @@ class ReleaseManager {
     console.log(chalk.cyan(`  📦 npm package:   @avanavo/copilot-instructions@${newVersion}`));
     console.log(chalk.cyan(`  📦 NuGet package: Avanavo.CopilotInstructions@${newVersion}`));
     console.log(chalk.cyan(`  🚀 This will trigger automatic publishing to both npm and NuGet\n`));
-    
+
     const { confirm } = await inquirer.prompt([
       {
         type: 'confirm',
@@ -192,55 +191,55 @@ class ReleaseManager {
 
   async performRelease(newVersion) {
     console.log(chalk.yellow('\n🔄 Performing dual package release...'));
-    
+
     // Update npm package.json version
     console.log(chalk.yellow('📝 Updating npm package.json...'));
     const npmPkg = await fs.readJson(this.npmPackagePath);
     npmPkg.version = newVersion;
     await fs.writeJson(this.npmPackagePath, npmPkg, { spaces: 2 });
-    
+
     // Update NuGet .csproj version
     console.log(chalk.yellow('📝 Updating NuGet .csproj version...'));
     await this.updateNuGetVersion(newVersion);
-    
+
     // Stage and commit version changes
     console.log(chalk.yellow('📄 Committing version changes...'));
     execSync(`git add ${this.npmPackagePath} ${this.nugetProjectPath}`, { stdio: 'inherit' });
     execSync(`git commit -m "Release v${newVersion} - Sync npm and NuGet versions"`, { stdio: 'inherit' });
-    
+
     // Create and push tag
     console.log(chalk.yellow('🏷️  Creating git tag...'));
     execSync(`git tag v${newVersion}`, { stdio: 'inherit' });
-    
+
     // Push commits and tags
     console.log(chalk.yellow('⬆️  Pushing to remote...'));
     execSync('git push', { stdio: 'inherit' });
     execSync('git push --tags', { stdio: 'inherit' });
-    
+
     // Create and publish GitHub release
     console.log(chalk.yellow('🚀 Creating and publishing GitHub release...'));
     await this.createGitHubRelease(newVersion);
-    
+
     console.log(chalk.green('✅ Dual package release committed and pushed'));
   }
 
   async updateNuGetVersion(newVersion) {
     const csprojContent = await fs.readFile(this.nugetProjectPath, 'utf8');
-    
+
     // Update PackageVersion element
     const updatedContent = csprojContent.replace(
       /<PackageVersion>.*?<\/PackageVersion>/,
       `<PackageVersion>${newVersion}</PackageVersion>`
     );
-    
+
     await fs.writeFile(this.nugetProjectPath, updatedContent, 'utf8');
   }
 
   async createGitHubRelease(version) {
     try {
       // Try to create release using GitHub CLI
-      execSync(`gh release create v${version} --generate-notes --title "Release v${version}"`, { 
-        stdio: 'inherit' 
+      execSync(`gh release create v${version} --generate-notes --title "Release v${version}"`, {
+        stdio: 'inherit'
       });
       console.log(chalk.green(`✅ GitHub release v${version} created and published`));
       console.log(chalk.green(`🚀 Publishing workflows will prepare and publish packages automatically`));
