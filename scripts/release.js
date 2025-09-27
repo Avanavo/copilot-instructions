@@ -52,13 +52,14 @@ class ReleaseManager {
     }
 
     // Check if working directory is clean
-
     const status = execSync('git status --porcelain', { encoding: 'utf8' });
-    if (status.trim()) {
-      throw new Error('Working directory is not clean. Please commit or stash changes.');
-    } else {
-      throw new Error('Unable to check git status');
-    }
+    try {
+      if (status.trim()) {
+        throw new Error('Working directory is not clean. Please commit or stash changes.', { cause: 'status' });
+      }
+    } catch (error) {
+      throw error;
+    } 
 
     // Check if we're on main branch
     try {
